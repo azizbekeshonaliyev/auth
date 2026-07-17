@@ -37,7 +37,7 @@ class AuthService(
 
         val user = User(
             username = request.username,
-            passwordHash = (passwordEncoder.encode(request.password) ?: throw IllegalStateException("Password encoding failed")) as String,
+            passwordHash = requireNotNull(passwordEncoder.encode(request.password)) { "Password cannot be null" },
             fullName = request.fullName.trim()
         )
 
@@ -65,15 +65,15 @@ class AuthService(
     }
 
 
-    fun getCurrentUser(email: String): UserResponse {
-        val user = userRepository.findByUsername(email) ?: throw InvalidCredentialsException("Foydalanuvchi topilmadi")
+    fun getCurrentUser(username: String): UserResponse {
+        val user = userRepository.findByUsername(username) ?: throw InvalidCredentialsException("Foydalanuvchi topilmadi")
         return UserResponse(user.id ?: throw IllegalStateException("User id"), user.username, user.fullName, user.role.name)
     }
 
 
-    private fun buildAuthResponse(email: String, role: String) = AuthResponse(
-        accessToken = jwtUtil.generateAccessToken(email, role),
-        refreshToken = jwtUtil.generateRefreshToken(email),
+    private fun buildAuthResponse(username: String, role: String) = AuthResponse(
+        accessToken = jwtUtil.generateAccessToken(username, role),
+        refreshToken = jwtUtil.generateRefreshToken(username),
         expiresIn = jwtUtil.accessTokenExpirationMs / 1000
     )
 }

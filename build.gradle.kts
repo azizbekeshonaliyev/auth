@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.spring") version "2.3.21"
-    kotlin("plugin.jpa") version "2.3.21"          // ⬅️ YANGI qo'shildi (JPA entity uchun kerak)
+    kotlin("plugin.jpa") version "2.3.21"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -22,12 +22,12 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-webmvc")       // ⬅️ YANGI (Boot3'dagi "-web" emas!)
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")     // ⬅️ YANGI
+    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")   // ⬅️ YANGI
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 
 
     //JWT
@@ -40,9 +40,14 @@ dependencies {
     runtimeOnly("com.h2database:h2")
 
 
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
+    testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("com.ninja-squad:springmockk:5.0.1")
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 }
 
 kotlin {
@@ -53,4 +58,10 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    testLogging {
+        events("passed", "failed", "skipped")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+    }
 }
