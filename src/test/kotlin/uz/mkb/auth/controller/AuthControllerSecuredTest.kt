@@ -5,34 +5,13 @@ import io.mockk.every
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration
-import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
-import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.FilterType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import uz.mkb.auth.config.SecurityConfig
 import uz.mkb.auth.dto.UserResponse
-import uz.mkb.auth.security.JwtAuthFilter
 import uz.mkb.auth.service.AuthService
 
-@WebMvcTest(
-    controllers = [AuthController::class],
-    excludeAutoConfiguration = [
-        SecurityAutoConfiguration::class,
-        SecurityFilterAutoConfiguration::class,
-        UserDetailsServiceAutoConfiguration::class,
-    ],
-    excludeFilters = [
-        ComponentScan.Filter(
-            type = FilterType.ASSIGNABLE_TYPE,
-            classes = [SecurityConfig::class, JwtAuthFilter::class],
-        ),
-    ],
-)
+@WebMvcTestWithoutSecurity(AuthController::class)
 class AuthControllerSecuredTest {
 
     @Autowired
