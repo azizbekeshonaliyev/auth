@@ -6,6 +6,7 @@ import org.junit.jupiter.api.assertNotNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
 import uz.mkb.auth.model.User
+import kotlin.test.assertNull
 
 @DataJpaTest
 class UserRepositoryTest {
@@ -33,6 +34,6 @@ class UserRepositoryTest {
     fun `findByUsername mavjud bolmagan user uchun null qaytaradi`() {
         val user = userRepository.findByUsername("nonexistent")
 
-        assertNotNull(user)
+        assertNull(user)
     }
 }
