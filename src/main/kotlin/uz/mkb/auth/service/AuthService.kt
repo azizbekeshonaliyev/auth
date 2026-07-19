@@ -7,6 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import uz.mkb.auth.dto.AuthResponse
+import uz.mkb.auth.dto.ChangePasswordRequest
 import uz.mkb.auth.dto.LoginRequest
 import uz.mkb.auth.dto.RefreshRequest
 import uz.mkb.auth.dto.RegisterRequest
@@ -64,6 +65,16 @@ class AuthService(
         return buildAuthResponse(user.username, user.role.name)
     }
 
+    fun changePassword(username: String, request: ChangePasswordRequest) {
+        val user = userRepository.findByUsername(username) ?: throw InvalidCredentialsException("Foydalanuvchi topilmadi")
+
+        if (!passwordEncoder.matches(request.oldPassword, user.passwordHash)) {
+            throw InvalidCredentialsException("Eski parol noto'g'ri")
+        }
+
+        user.passwordHash = requireNotNull(passwordEncoder.encode(request.newPassword)) { "Password cannot be null" }
+        userRepository.save(user)
+    }
 
     fun getCurrentUser(username: String): UserResponse {
         val user = userRepository.findByUsername(username) ?: throw InvalidCredentialsException("Foydalanuvchi topilmadi")

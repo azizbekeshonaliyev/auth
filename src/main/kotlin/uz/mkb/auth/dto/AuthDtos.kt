@@ -29,6 +29,15 @@ data class RefreshRequest(
     val refreshToken: String
 )
 
+data class ChangePasswordRequest(
+    @field:NotBlank("Eski parol kiritilishi kerak")
+    val oldPassword: String,
+
+    @field:Size(min = 6, message = "Yangi parol kamida 6 belgidan iborat bo'lishi kerak")
+    @field:NotBlank("Yangi parol kiritilishi kerak")
+    val newPassword: String
+)
+
 data class AuthResponse(
     val accessToken: String,
     val refreshToken: String,

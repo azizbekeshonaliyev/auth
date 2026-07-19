@@ -98,7 +98,7 @@ class AuthIntegrationTest {
 
         val responseBody = result.response.contentAsString
 
-        val accessToken = objectMapper.readTree(responseBody).get("accessToken").asText()
+        val accessToken = objectMapper.readTree(responseBody).get("accessToken").asString()
 
         mockMvc.get("/api/auth/me") {
             header("Authorization", "Bearer $accessToken")
@@ -106,6 +106,75 @@ class AuthIntegrationTest {
         .andExpect {
             status { isOk() }
             jsonPath("$.username") { value("aziz") }
+        }
+    }
+
+    @Test
+    fun `me tokensiz 401 qaytarishi kerak`(){
+        mockMvc.get("/api/auth/me")
+            .andExpect {
+                status { isUnauthorized() }
+            }
+
+    }
+
+    @Test
+    fun `yaroqsiz token 401 qaytarishi kerak`(){
+        mockMvc.get("/api/auth/me"){
+            header("Authorization","Bearer token")
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `invalid password`(){
+        mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "username": "ali",
+                    "password": "password123"
+                }
+            """.trimIndent()
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    fun `dublikat username 409 qaytaradi`() {
+        val body = """
+        {
+            "username": "dublikat",
+            "password": "password123",
+            "fullName": "Test User"
+        }
+    """.trimIndent()
+
+        // birinchi register — muvaffaqiyatli
+        mockMvc.post("/api/auth/register") {
+            contentType = MediaType.APPLICATION_JSON
+            content = body
+        }.andExpect { status { isCreated() } }
+
+        // ikkinchi marta shu username bilan — 409
+        mockMvc.post("/api/auth/register") {
+            contentType = MediaType.APPLICATION_JSON
+            content = body
+        }.andExpect {
+            status { isConflict() }
+            jsonPath("$.message") { value("Username dublikat is already taken") }
+        }
+    }
+
+    @Test
+    fun `yaroqsiz refresh token 401 qaytaradi`() {
+        mockMvc.post("/api/auth/refresh") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"refreshToken": "buYaroqsizToken"}"""
+        }.andExpect {
+            status { isUnauthorized() }
         }
     }
 }

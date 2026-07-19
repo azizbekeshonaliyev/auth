@@ -6,10 +6,16 @@ import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import uz.mkb.auth.dto.ErrorResponse
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNotFound(ex: NoResourceFoundException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse("Resurs topilmadi"))
 
     @ExceptionHandler(UsernameAlreadyExistsException::class)
     fun handleEmailAlreadyExistsException(e: UsernameAlreadyExistsException): ResponseEntity<ErrorResponse> =

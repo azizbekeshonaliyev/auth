@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import uz.mkb.auth.dto.AuthResponse
+import uz.mkb.auth.dto.ChangePasswordRequest
 import uz.mkb.auth.dto.LoginRequest
 import uz.mkb.auth.dto.RefreshRequest
 import uz.mkb.auth.dto.RegisterRequest
@@ -38,4 +39,14 @@ class AuthController(private val authService: AuthService) {
     @GetMapping("/me")
     fun me(@AuthenticationPrincipal userDetails: UserDetails): ResponseEntity<UserResponse> =
         ResponseEntity.ok(authService.getCurrentUser(userDetails.username))
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/change-password")
+    fun changePassword(
+        @AuthenticationPrincipal userDetails: UserDetails,
+        @Valid @RequestBody request: ChangePasswordRequest,
+    ): ResponseEntity<Void> {
+        authService.changePassword(userDetails.username, request)
+        return ResponseEntity.noContent().build()
+    }
 }

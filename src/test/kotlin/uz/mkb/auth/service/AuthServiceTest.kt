@@ -2,6 +2,7 @@ package uz.mkb.auth.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.crypto.password.PasswordEncoder
+import uz.mkb.auth.dto.ChangePasswordRequest
 import uz.mkb.auth.dto.LoginRequest
 import uz.mkb.auth.dto.RefreshRequest
 import uz.mkb.auth.dto.RegisterRequest
@@ -245,6 +247,71 @@ class AuthServiceTest {
             verify { userRepository.findByUsername("ali") }
 
             assertEquals("Foydalanuvchi topilmadi", exception.message)
+        }
+    }
+
+    @Nested
+    inner class ChangePassword {
+        @Test
+        fun `change password success`(){
+            val user = User(
+                id = 1L,
+                username = "ali",
+                fullName = "Ali Valiyev",
+                passwordHash = "oldHashed"
+            )
+
+            every { userRepository.findByUsername("ali") } returns user
+            every { passwordEncoder.matches("password123", "oldHashed") } returns true
+            every { passwordEncoder.encode("newpassword") } returns "newHashed"
+            every { userRepository.save(any()) } answers { firstArg() }
+
+            val changePasswordRequest = ChangePasswordRequest(
+                oldPassword = "password123",
+                newPassword = "newpassword"
+            )
+
+            authService.changePassword("ali", changePasswordRequest)
+
+            val userSlot = slot<User>()
+            verify { userRepository.save(capture(userSlot)) }
+            assertEquals("newHashed", userSlot.captured.passwordHash)
+        }
+
+        @Test
+        fun `Error when old password do not match`(){
+            val user = User(
+                id = 1L,
+                username = "ali",
+                fullName = "Ali Valiyev",
+                passwordHash = "oldHashed"
+            )
+            every { userRepository.findByUsername("ali") } returns user
+            every { passwordEncoder.matches("password123", "oldHashed") } returns false
+
+            val exception = assertFailsWith<InvalidCredentialsException> {
+                authService.changePassword("ali",ChangePasswordRequest(oldPassword = "password123", newPassword = "newpassword"))
+            }
+
+            assertEquals("Eski parol noto'g'ri", exception.message)
+
+            verify(exactly = 0) { userRepository.save(any()) }
+            verify(exactly = 0) { passwordEncoder.encode("newpassword") }
+        }
+
+        @Test
+        fun `Foydalanuvchi topilmasa exception tashlaydi`() {
+            // given
+            every { userRepository.findByUsername("yoq") } returns null
+
+            // when + then
+            val exception = assertFailsWith<InvalidCredentialsException> {
+                authService.changePassword("yoq", ChangePasswordRequest("password123", "newpassword"))
+            }
+            assertEquals("Foydalanuvchi topilmadi", exception.message)
+
+            verify(exactly = 0) { passwordEncoder.matches(any(), any()) }
+            verify(exactly = 0) { userRepository.save(any()) }
         }
     }
 }
