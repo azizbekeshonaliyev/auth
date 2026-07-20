@@ -177,4 +177,69 @@ class AuthIntegrationTest {
             status { isUnauthorized() }
         }
     }
+
+    @Test
+    fun `parolni yangilash toliq oqim`() {
+
+        // 1. Register user
+        mockMvc.post("/api/auth/register"){
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "username": "testuser",
+                    "password": "oldpassword",
+                    "fullName": "Test User"
+                }
+            """.trimIndent()
+        }.andExpect {
+            status { isCreated() }
+        }
+
+        //2. Get token
+        val result = mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "username": "testuser",
+                    "password": "oldpassword"
+                }
+            """.trimIndent()
+        }.andExpect { status { isOk() } }.andReturn()
+        val responseBody = result.response.contentAsString
+        val accessToken = objectMapper.readTree(responseBody).get("accessToken").asString()
+
+        //3. Change password
+        mockMvc.post("/api/auth/change-password") {
+            header("Authorization", "Bearer $accessToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "oldPassword": "oldpassword",
+                    "newPassword": "newpassword"
+                }
+            """.trimIndent()
+        }.andExpect { status { isNoContent() } }
+
+        //4. Check with old password
+        mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                    "username": "testuser",
+                    "password": "oldpassword"
+                }
+            """.trimIndent()
+        }.andExpect { status { isUnauthorized() } }
+
+        //5. Check with new password
+        mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                "username": "testuser",
+                "password": "newpassword"
+                }
+            """.trimIndent()
+        }.andExpect { status { isOk() } }
+    }
 }

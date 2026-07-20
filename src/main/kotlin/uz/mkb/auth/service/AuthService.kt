@@ -65,6 +65,7 @@ class AuthService(
         return buildAuthResponse(user.username, user.role.name)
     }
 
+    @Transactional
     fun changePassword(username: String, request: ChangePasswordRequest) {
         val user = userRepository.findByUsername(username) ?: throw InvalidCredentialsException("Foydalanuvchi topilmadi")
 
